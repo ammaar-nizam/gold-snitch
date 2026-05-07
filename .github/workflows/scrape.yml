@@ -1,0 +1,45 @@
+name: Gold Price Monitor
+
+on:
+  schedule:
+    # Runs daily at 00:00 UTC. Adjust to match 8 AM your local time:
+    #   UTC+8  (MY/SG): "0 0 * * *"
+    #   UTC+5:30 (IN):  "30 2 * * *"
+    #   UTC+3  (GST):   "0 5 * * *"
+    #   UTC-5  (EST):   "0 13 * * *"
+    - cron: "0 0 * * *"
+  workflow_dispatch: # manual trigger for testing
+
+permissions:
+  contents: write # required to commit state.json back to the repo
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run scraper
+        env:
+          TARGET_URL: ${{ secrets.TARGET_URL }}
+          CSS_SELECTOR: ${{ secrets.CSS_SELECTOR }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: python scraper.py
+
+      - name: Commit updated state
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add state.json
+          git diff --cached --quiet || git commit -m "chore: update scraper state [skip ci]"
+          git push
