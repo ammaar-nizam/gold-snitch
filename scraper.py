@@ -37,7 +37,11 @@ def fetch_price() -> str:
             "The page structure may have changed."
         )
 
-    return el.get_text(strip=True)
+    value = el.get_text(strip=True)
+    # Remove '22KT ' prefix if present
+    if value.startswith("22KT "):
+        value = value[len("22KT "):]
+    return value
 
 
 def load_state() -> dict:
@@ -58,7 +62,7 @@ def notify(message: str, title: str = "Gold Price Alert", priority: str = "high"
             headers={
                 "Title": title,
                 "Priority": priority,
-                "Tags": "moneybag",
+                "Tags": "chart_with_downwards_trend",
             },
             timeout=10,
         )
@@ -72,7 +76,7 @@ def notify(message: str, title: str = "Gold Price Alert", priority: str = "high"
 def main() -> None:
     print(f"[INFO] Fetching: {TARGET_URL}")
     current_price = fetch_price()
-    print(f"[INFO] Current price: {current_price}")
+    print(f"[INFO] Today's price: {current_price}")
 
     state = load_state()
     previous_price = state.get("last_value")
@@ -80,15 +84,15 @@ def main() -> None:
     if previous_price is None:
         print("[INFO] No previous state — storing initial value.")
         notify(
-            f"Gold price monitoring started.\nCurrent price: {current_price}",
-            title="Gold Snitch — Started",
+            f"Gold rate at Ravi Jewellers.\nToday's price: {current_price}",
+            title="Gold Snitch",
             priority="default",
         )
     elif current_price != previous_price:
         print(f"[CHANGE] {previous_price} → {current_price}")
         notify(
-            f"Gold price changed!\n\nBefore: {previous_price}\nAfter:  {current_price}\n\n{TARGET_URL}",
-            title="Gold Snitch — Price Changed",
+            f"Gold price changed!\n\nYesterday: {previous_price}\nToday:  {current_price}",
+            title="Gold Snitch - Price Changed",
             priority="high",
         )
     else:
@@ -104,7 +108,7 @@ if __name__ == "__main__":
     except Exception as e:
         notify(
             f"Scraper encountered an error and stopped.\n\nError: {e}",
-            title="Gold Snitch — ERROR",
+            title="Gold Snitch - ERROR",
             priority="urgent",
         )
         raise
