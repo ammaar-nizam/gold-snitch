@@ -29,16 +29,6 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Debug env vars
-        run: |
-          echo "TARGET_URL=$TARGET_URL"
-          echo "CSS_SELECTOR=$CSS_SELECTOR"
-          echo "NTFY_TOPIC=$NTFY_TOPIC"
-        env:
-          TARGET_URL: ${{ secrets.TARGET_URL }}
-          CSS_SELECTOR: ${{ secrets.CSS_SELECTOR }}
-          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
-
       - name: Run scraper
         env:
           TARGET_URL: ${{ secrets.TARGET_URL }}
